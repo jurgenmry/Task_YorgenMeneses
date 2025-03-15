@@ -56,10 +56,23 @@ void ATask_PlayableCharacher::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
+void ATask_PlayableCharacher::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+}
 
 void ATask_PlayableCharacher::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (ATask_PlayerControllerBase* playerController = Cast<ATask_PlayerControllerBase>(GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			GEngine->AddOnScreenDebugMessage(5, -1, FColor::Red, FString::Printf(TEXT("Added subsystem")), 1);
+		}
+	}
 
 	if (IsLocallyControlled())
 	{
@@ -71,14 +84,21 @@ void ATask_PlayableCharacher::BeginPlay()
 		SetActorTickEnabled(false);
 	}
 
-	if (ATask_PlayerControllerBase* playerController = Cast<ATask_PlayerControllerBase>(GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-			//GEngine->AddOnScreenDebugMessage(5, -1, FColor::Red, FString::Printf(TEXT("Added subsystem")), 1);
-		}
-	}
+}
+
+void ATask_PlayableCharacher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	UTask_EnhancedInputComponent* SInputComponent = Cast<UTask_EnhancedInputComponent>(PlayerInputComponent);
+	check(SInputComponent);
+
+	const FEGameplayTags& GameplayTags = FEGameplayTags::Get();
+	TArray<uint32> BindHandles;
+
+	SInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::InputAbilityInputTagPressed, &ThisClass::InputAbilityInputTagReleased, BindHandles);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Move, ETriggerEvent::Triggered, this, &ThisClass::Move);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Look, ETriggerEvent::Triggered, this, &ThisClass::Look);
 }
 
 void ATask_PlayableCharacher::InitAbilityActorInfo()
@@ -105,19 +125,10 @@ void ATask_PlayableCharacher::InitAbilityActorInfo()
 	}
 }
 
-void ATask_PlayableCharacher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ATask_PlayableCharacher::OnRep_PlayerState()
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	UTask_EnhancedInputComponent* SInputComponent = Cast<UTask_EnhancedInputComponent>(PlayerInputComponent);
-	check(SInputComponent);
-
-	const FEGameplayTags& GameplayTags = FEGameplayTags::Get();
-	TArray<uint32> BindHandles;
-
-	SInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::InputAbilityInputTagPressed, &ThisClass::InputAbilityInputTagReleased, BindHandles);
-	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Input_Move, ETriggerEvent::Triggered, this, &ThisClass::Move);
-	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Input_Look, ETriggerEvent::Triggered, this, &ThisClass::Look);
+	Super::OnRep_PlayerState();
+	InitAbilityActorInfo();
 }
 
 void ATask_PlayableCharacher::PossessedBy(AController* NewController)

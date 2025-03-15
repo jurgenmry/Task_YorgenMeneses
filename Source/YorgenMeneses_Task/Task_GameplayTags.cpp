@@ -15,11 +15,11 @@ void FEGameplayTags::InitializeNativeTags()
 
 void FEGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
 {
-	AddTag(Task_Input_Move, "Task.Input.Move", "Move input.");
-	AddTag(Task_Input_Look, "Task.Input.Look", "Look input.");
+	AddTag(Task_Native_Input_Move, "Task_Native_Input.Move", "Move input.");
+	AddTag(Task_Native_Input_Look, "Task_Native_Input.Look", "Look input.");
 
-	//AddTag(Ability_Input_OnInputTriggered, "Ability.Input.OnInputTriggered", "Test ability input.");
-	//AddTag(Ability_Input_WhileInputActive, "Ability.Input.WhileInputActive", "Test ability input.");
+	AddTag(Ability_Input_OnInputTriggered, "Ability.Input.OnInputTriggered", "Test ability input.");
+	AddTag(Ability_Input_WhileInputActive, "Ability.Input.WhileInputActive", "Test ability input.");
 }
 
 void FEGameplayTags::AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment)

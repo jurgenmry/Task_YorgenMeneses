@@ -14,11 +14,11 @@ public:
 	static const FEGameplayTags& Get() { return GameplayTags; }
 	static void InitializeNativeTags();
 
-	FGameplayTag Task_Input_Move;
-	FGameplayTag Task_Input_Look;
+	FGameplayTag Task_Native_Input_Move;
+	FGameplayTag Task_Native_Input_Look;
 
-	//FGameplayTag Ability_Input_WhileInputActive;
-	//FGameplayTag Ability_Input_OnInputTriggered;
+	FGameplayTag Ability_Input_WhileInputActive;
+	FGameplayTag Ability_Input_OnInputTriggered;
 
 protected:
 

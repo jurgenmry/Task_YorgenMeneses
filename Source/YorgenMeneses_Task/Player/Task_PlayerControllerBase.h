@@ -27,6 +27,8 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "InputSystem|Player")
 	ATask_BaseCharacher* GetPlayer() const;
 
+	UFUNCTION(BlueprintCallable, Category = "InputSystem|PlayerState")
+	ATask_PlayerState* GetPlayerState() const;
 
 	UFUNCTION(BlueprintCallable, Category = "InputSystem|AbilitySystemComponent")
 	UTask_AbilitySystemComponent* GetAbilitySystemComponent() const;

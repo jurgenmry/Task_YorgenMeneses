@@ -13,5 +13,13 @@ UCLASS()
 class YORGENMENESES_TASK_API UTask_AssetManager : public UAssetManager
 {
 	GENERATED_BODY()
+
+public:
+
+	UTask_AssetManager();
+
+	static UTask_AssetManager& Get();
+
+	virtual void StartInitialLoading() override;
 	
 };
