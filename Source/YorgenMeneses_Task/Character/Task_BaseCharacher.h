@@ -39,10 +39,6 @@ protected:
 
 	virtual void InitializeAttributes();
 
-	virtual void AddCharacterAbilities();
-
-	virtual void RemoveCharacterAbilities();
-
 	virtual void RemoveAllGameplayEffects();
 
 	virtual void ApplyGEToSelf(TSubclassOf<UGameplayEffect>GameplayEffectClass, float Level); //Apply effect to self
