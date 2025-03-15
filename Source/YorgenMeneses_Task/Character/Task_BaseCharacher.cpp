@@ -11,6 +11,11 @@ ATask_BaseCharacher::ATask_BaseCharacher()
 
 }
 
+UAbilitySystemComponent* ATask_BaseCharacher::GetAbilitySystemComponent() const
+{
+	return nullptr;
+}
+
 // Called when the game starts or when spawned
 void ATask_BaseCharacher::BeginPlay()
 {
@@ -18,17 +23,29 @@ void ATask_BaseCharacher::BeginPlay()
 	
 }
 
-// Called every frame
-void ATask_BaseCharacher::Tick(float DeltaTime)
+void ATask_BaseCharacher::InitAbilityActorInfo()
 {
-	Super::Tick(DeltaTime);
-
 }
 
-// Called to bind functionality to input
-void ATask_BaseCharacher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ATask_BaseCharacher::InitializeAttributes()
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
+
+void ATask_BaseCharacher::AddCharacterAbilities()
+{
+}
+
+void ATask_BaseCharacher::RemoveCharacterAbilities()
+{
+}
+
+void ATask_BaseCharacher::RemoveAllGameplayEffects()
+{
+}
+
+void ATask_BaseCharacher::ApplyGEToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level)
+{
+}
+
+
 

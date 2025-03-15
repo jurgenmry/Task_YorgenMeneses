@@ -1,29 +1,50 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "GameplayTagContainer.h"
+#include "AbilitySystemInterface.h"
 #include "Task_BaseCharacher.generated.h"
 
-UCLASS()
-class YORGENMENESES_TASK_API ATask_BaseCharacher : public ACharacter
+class UAbilitySystemComponent;
+class UTask_AbilitySystemComponent;
+class UTask_AttributeSet;
+
+UCLASS(Abstract)
+class YORGENMENESES_TASK_API ATask_BaseCharacher : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
+
 	ATask_BaseCharacher();
 
+	// Implement IAbilitySystemInterface
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
 protected:
-	// Called when the game starts or when spawned
+	
 	virtual void BeginPlay() override;
+	virtual void InitAbilityActorInfo();
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY()
+	TWeakObjectPtr<UTask_AbilitySystemComponent> AbilitySystemComponent;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY()
+	TObjectPtr<UTask_AttributeSet>AttributeSet;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GAS|Abilities")
+	TSubclassOf<class UGameplayEffect> VitaltAttributes;
+
+	virtual void InitializeAttributes();
+
+	virtual void AddCharacterAbilities();
+
+	virtual void RemoveCharacterAbilities();
+
+	virtual void RemoveAllGameplayEffects();
+
+	virtual void ApplyGEToSelf(TSubclassOf<UGameplayEffect>GameplayEffectClass, float Level); //Apply effect to self
 
 };
