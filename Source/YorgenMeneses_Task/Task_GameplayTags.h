@@ -14,8 +14,12 @@ public:
 	static const FEGameplayTags& Get() { return GameplayTags; }
 	static void InitializeNativeTags();
 
-	FGameplayTag Task_Native_Input_Move;
-	FGameplayTag Task_Native_Input_Look;
+	
+	FGameplayTag Task_Native_Input_LookUp;
+	FGameplayTag Task_Native_Input_MoveRight;
+	FGameplayTag Task_Native_Input_MoveForward;
+	FGameplayTag Task_Native_Input_Turn;
+	FGameplayTag Task_Native_Input_Camera_Zoom;
 
 	FGameplayTag Ability_Input_WhileInputActive;
 	FGameplayTag Ability_Input_OnInputTriggered;

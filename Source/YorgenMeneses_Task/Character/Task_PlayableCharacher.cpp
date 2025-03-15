@@ -20,6 +20,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/StaticMeshComponent.h"
 
 //Input
 #include "EnhancedInputSubsystems.h"
@@ -36,15 +37,17 @@ ATask_PlayableCharacher::ATask_PlayableCharacher()
 	bReplicates = true;
 
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
-	Mesh1P->SetOnlyOwnerSee(true);
+	Mesh1P->SetOnlyOwnerSee(false);
 	Mesh1P->SetupAttachment(GetRootComponent());
 	Mesh1P->bCastDynamicShadow = true;
 	Mesh1P->CastShadow = true;
 
 	BoomArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("BoomArm"));
-	FName SocketName = TEXT("HatSocket");
-	BoomArm->SetupAttachment(Mesh1P, SocketName);
-	BoomArm->TargetArmLength = -20.0f;
+	BoomArm->SetupAttachment(GetRootComponent());
+	BoomArm->TargetArmLength = 300.0f;
+
+	SkateBoardMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SkateBoardMesh"));
+	SkateBoardMesh->SetupAttachment(Mesh1P);
 
 	CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CharacterCameraComponent"));
 	CharacterCameraComponent->SetupAttachment(BoomArm);
@@ -97,8 +100,11 @@ void ATask_PlayableCharacher::SetupPlayerInputComponent(UInputComponent* PlayerI
 	TArray<uint32> BindHandles;
 
 	SInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::InputAbilityInputTagPressed, &ThisClass::InputAbilityInputTagReleased, BindHandles);
-	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Move, ETriggerEvent::Triggered, this, &ThisClass::Move);
-	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Look, ETriggerEvent::Triggered, this, &ThisClass::Look);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveForward, ETriggerEvent::Triggered, this, &ThisClass::MoveForward);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveRight, ETriggerEvent::Triggered, this, &ThisClass::MoveRight);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_LookUp, ETriggerEvent::Triggered, this, &ThisClass::LookUp);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Turn, ETriggerEvent::Triggered, this, &ThisClass::Turn);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Camera_Zoom, ETriggerEvent::Triggered, this, &ThisClass::UpdateCameraZoom);
 }
 
 void ATask_PlayableCharacher::InitAbilityActorInfo()
@@ -150,40 +156,28 @@ void ATask_PlayableCharacher::PossessedBy(AController* NewController)
 }
 
 
-void ATask_PlayableCharacher::Move(const FInputActionValue& Value)
+void ATask_PlayableCharacher::MoveForward(const FInputActionValue& Value)
 {
-	const FVector2D DirectionValue = Value.Get<FVector2D>();
-	if (GetController())
-	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0.0f, Rotation.Yaw, 0.0f);
-
-		const FVector ForwardVector = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(ForwardVector, DirectionValue.Y);
-
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		AddMovementInput(RightDirection, DirectionValue.X);
-
-		//GEngine->AddOnScreenDebugMessage(5, -1, FColor::Red, FString::Printf(TEXT("Move Pressed")), 1);
-	}
 }
 
-void ATask_PlayableCharacher::Look(const FInputActionValue& Value)
+void ATask_PlayableCharacher::MoveRight(const FInputActionValue& Value)
 {
-	const FVector2D LookValue = Value.Get<FVector2D>();
+}
 
-	if (GetController())
-	{
-		if (LookValue.X != 0.0f)
-		{
-			AddControllerYawInput(LookValue.X);
-		}
+void ATask_PlayableCharacher::LookUp(const FInputActionValue& Value)
+{
+	float LookValue = Value.Get<float>();
+	AddControllerPitchInput(-LookValue);
+}
 
-		if (LookValue.Y != 0.0f)
-		{
-			AddControllerPitchInput(-LookValue.Y);
-		}
-	}
+void ATask_PlayableCharacher::Turn(const FInputActionValue& Value)
+{
+	float TurnValue = Value.Get<float>();
+	AddControllerYawInput(TurnValue);
+}
+
+void ATask_PlayableCharacher::UpdateCameraZoom(float DeltaTime)
+{
 }
 
 void ATask_PlayableCharacher::InputAbilityInputTagPressed(FGameplayTag InputTag)

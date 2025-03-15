@@ -13,6 +13,7 @@
 
 class UInputMappingContext;
 class USkeletalMeshComponent;
+class UStaticMeshComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UTask_AbilitySet;
@@ -40,6 +41,9 @@ public:
 	USpringArmComponent* BoomArm;
 	FORCEINLINE USpringArmComponent* GetSpringArm() const { return BoomArm; }
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* SkateBoardMesh;
+	FORCEINLINE UStaticMeshComponent* GetSkateBoard() const { return SkateBoardMesh; }
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -51,8 +55,11 @@ public:
 	void InputAbilityInputTagPressed(FGameplayTag InputTag);
 	void InputAbilityInputTagReleased(FGameplayTag InputTag);
 
-	virtual void Move(const FInputActionValue& Value);
-	virtual void Look(const FInputActionValue& Value);
+	virtual void MoveForward(const FInputActionValue& Value);
+	virtual void Turn(const FInputActionValue& Value);
+	virtual void MoveRight(const FInputActionValue& Value);
+	virtual void LookUp(const FInputActionValue& Value);
+	void UpdateCameraZoom(float DeltaTime);
 
 	virtual void InitAbilityActorInfo() override;
 
