@@ -47,7 +47,26 @@ public:
 	float SuspensionForce;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float SteeringForce;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float PlayerAcceleration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float MaxBoardSpeed;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Settings");
+	bool bMoving;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (ClampMin = "10.0", ClampMax = "100.0"))
+	float AccelerationRate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Settings")
+	float CurrentBoardSpeed;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Settings")
+	bool bNeedsSpeedUpdate;
+
 
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
@@ -115,7 +134,8 @@ public:
 	void MoveForward(const FInputActionValue& Value);
 	void MoveRight(const FInputActionValue& Value);
 ;
-	void CarSuspention(USceneComponent* Tire);
+	void BoardSuspention(USceneComponent* Tire);
+	void UpdateSpeed(float DeltaTime);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "InputSystem|Input")
 	UInputMappingContext* DefaultMappingContext;

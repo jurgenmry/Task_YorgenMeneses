@@ -40,7 +40,7 @@ ATask_PlayableCharacher::ATask_PlayableCharacher()
 	, AngularDamping(5.0f)
 	, SuspensionLength(20.0f)
 	, SuspensionForce(8000.0f)
-	, SteeringForce(25000.0f)
+	, SteeringForce(5000.0f)
 	, PlayerAcceleration(100.0f)
 	, MaxBoardSpeed(1000.0f)
 	, bMoving(false)
@@ -269,7 +269,7 @@ void ATask_PlayableCharacher::UpdateSpeed(float DeltaTime)
 			// Calculate the desired horizontal velocity in the forward direction.
 			FVector ForwardVelocity = GetActorForwardVector() * CurrentBoardSpeed;
 
-			// Get the current velocity
+			// Get the current velocity and preserve the vertical component.
 			FVector CurrentVelocity = BoxCollision->GetPhysicsLinearVelocity();
 			ForwardVelocity.Z = CurrentVelocity.Z;
 
@@ -277,9 +277,10 @@ void ATask_PlayableCharacher::UpdateSpeed(float DeltaTime)
 			BoxCollision->SetPhysicsLinearVelocity(ForwardVelocity);
 		}
 
-		// Stop updating if we've reached our speed target.
+		// Optionally, stop updating if we've reached our target.
 		if (FMath::IsNearlyEqual(CurrentBoardSpeed, TargetSpeed, 0.1f))
 		{
+			// When speed is zero, you might choose to stop further updates.
 			if (CurrentBoardSpeed == 0.0f)
 			{
 				bNeedsSpeedUpdate = false;
