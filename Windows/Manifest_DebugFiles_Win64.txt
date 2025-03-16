@@ -1,0 +1,8 @@
+YorgenMeneses_Task/Binaries/Win64/YorgenMeneses_Task.pdb	2025-03-16T22:55:46.614Z
+YorgenMeneses_Task/Binaries/Win64/tbb.pdb	2024-06-09T09:08:51.970Z
+YorgenMeneses_Task/Binaries/Win64/tbbmalloc.pdb	2024-06-09T09:08:51.970Z
+Engine/Content/SlateDebug/Fonts/LastResort.tps	2024-06-09T09:11:55.744Z
+Engine/Content/SlateDebug/Fonts/LastResort.ttf	2024-06-09T09:11:55.748Z
+Engine/Extras/GPUDumpViewer/GPUDumpViewer.html	2024-06-09T09:15:58.640Z
+Engine/Extras/GPUDumpViewer/OpenGPUDumpViewer.bat	2024-06-09T09:15:58.641Z
+Engine/Extras/GPUDumpViewer/OpenGPUDumpViewer.sh	2024-06-09T09:15:58.641Z
