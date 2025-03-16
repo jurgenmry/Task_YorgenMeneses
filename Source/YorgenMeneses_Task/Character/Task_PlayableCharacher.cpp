@@ -41,6 +41,7 @@ ATask_PlayableCharacher::ATask_PlayableCharacher()
 	, SuspensionLength(20.0f)
 	, SuspensionForce(8000.0f)
 	, SteeringForce(25000.0f)
+	, JumpForce(300.0f)
 	, PlayerAcceleration(100.0f)
 	, MaxBoardSpeed(1000.0f)
 	, bMoving(false)
@@ -145,6 +146,8 @@ void ATask_PlayableCharacher::SetupPlayerInputComponent(UInputComponent* PlayerI
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_LookUp, ETriggerEvent::Triggered, this, &ThisClass::LookUp);
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Turn, ETriggerEvent::Triggered, this, &ThisClass::Turn);
 
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Jump, ETriggerEvent::Triggered, this, &ThisClass::BoardJump);
+
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveForward, ETriggerEvent::Triggered, this, &ThisClass::MoveForward);
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveForward, ETriggerEvent::Completed, this, &ThisClass::MoveForward);
 
@@ -191,6 +194,26 @@ void ATask_PlayableCharacher::MoveRight(const FInputActionValue& Value)
 		// Apply torque around the Z-axis (up axis) to steer.
 		FVector Torque = FVector(0.0f, 0.0f, MovementInput * SteeringForce);
 		BoxCollision->AddTorqueInRadians(Torque);
+	}
+}
+
+void  ATask_PlayableCharacher::BoardJump(const FInputActionValue& Value)
+{
+	// Only jump if all tires are on the ground.
+	if (AllTiresGrounded())
+	{
+		// Play the jump animation on the character mesh, if one is set.
+		if (Mesh1P && JumpAnimation)
+		{
+			Mesh1P->PlayAnimation(JumpAnimation, false);
+		}
+
+		// Apply an upward impulse from the bottom of the board.
+		FVector JumpImpulse = FVector(0.0f, 0.0f, JumpForce);
+		if (BoxCollision)
+		{
+			BoxCollision->AddImpulse(JumpImpulse);
+		}
 	}
 }
 
@@ -242,6 +265,32 @@ void ATask_PlayableCharacher::BoardSuspention(USceneComponent* Tire)
 	}
 }
 
+bool ATask_PlayableCharacher::AllTiresGrounded()
+{
+	// Iterate over each tire
+	for (USceneComponent* Tire : Tires)
+	{
+		if (!Tire) continue;
+
+		// Set up the line trace starting at the tire and going downward.
+		FVector Start = Tire->GetComponentLocation();
+		FVector End = Start + FVector(0.0f, 0.0f, -SuspensionLength);
+
+		FHitResult HitResult;
+		FCollisionQueryParams TraceParams;
+		TraceParams.AddIgnoredActor(this);
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, TraceParams);
+
+		// If one tire does not register a blocking hit, then we consider the board not fully grounded.
+		if (!bHit || !HitResult.bBlockingHit)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 void ATask_PlayableCharacher::UpdateSpeed(float DeltaTime)
 {
 	// Update speed only if necessary.
@@ -287,6 +336,7 @@ void ATask_PlayableCharacher::UpdateSpeed(float DeltaTime)
 		}
 	}
 }
+
 
 
 void ATask_PlayableCharacher::InitAbilityActorInfo()

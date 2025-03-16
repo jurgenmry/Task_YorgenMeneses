@@ -49,6 +49,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float SteeringForce;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float JumpForce;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float PlayerAcceleration;
 
@@ -67,7 +70,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Settings")
 	bool bNeedsSpeedUpdate;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UAnimationAsset* JumpAnimation;
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	TArray<USceneComponent*>Tires;
@@ -133,8 +137,10 @@ public:
 	void Turn(const FInputActionValue& Value);
 	void MoveForward(const FInputActionValue& Value);
 	void MoveRight(const FInputActionValue& Value);
-;
+	void BoardJump(const FInputActionValue& Value);
+
 	void BoardSuspention(USceneComponent* Tire);
+	bool AllTiresGrounded();
 	void UpdateSpeed(float DeltaTime);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "InputSystem|Input")
