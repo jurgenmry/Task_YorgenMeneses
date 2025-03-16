@@ -3,6 +3,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Character/Task_PlayableCharacher.h"
+#include "Player/Task_PlayerControllerBase.h"
 
 ATask_PointZone::ATask_PointZone()
 {
@@ -64,13 +65,20 @@ void ATask_PointZone::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AAc
 
           
             int32 AwardedPoints = FMath::RandRange(MinPoints, MaxPoints);
-            // Award points (assumes your player character has an AddPoints method).
-            // PlayerChar->AddPoints(AwardedPoints);
+
+            ATask_PlayerControllerBase* PC = Cast<ATask_PlayerControllerBase>(GetWorld()->GetFirstPlayerController());
+            if (PC)
+            {
+                PC->AddPointsToHUD(AwardedPoints);
+            }
+
+            /*
             if (GEngine)
             {
                 FString DebugMsg = FString::Printf(TEXT("Awarded %d points!"), AwardedPoints);
                 GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, DebugMsg);
             }
+            */
         }
      } 
 }

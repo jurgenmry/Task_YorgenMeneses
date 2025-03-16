@@ -32,9 +32,9 @@ protected:
     
     UFUNCTION()
     void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, 
-        AActor* OtherActor,
-        UPrimitiveComponent* OtherComp, 
-        int32 OtherBodyIndex);
+            AActor* OtherActor,
+            UPrimitiveComponent* OtherComp, 
+            int32 OtherBodyIndex);
 
 public:
     

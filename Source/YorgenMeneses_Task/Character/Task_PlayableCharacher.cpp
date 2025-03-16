@@ -47,7 +47,6 @@ ATask_PlayableCharacher::ATask_PlayableCharacher()
 	, bMoving(false)
 	, AccelerationRate(50.0f)
 	, LessBoardFlipChance(0.5f)
-	
 {
 	bReplicates = true;
 	SetActorTickEnabled(true);
