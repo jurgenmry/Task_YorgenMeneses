@@ -46,6 +46,7 @@ ATask_PlayableCharacher::ATask_PlayableCharacher()
 	, MaxBoardSpeed(1000.0f)
 	, bMoving(false)
 	, AccelerationRate(50.0f)
+	, LessBoardFlipChance(0.5f)
 	
 {
 	bReplicates = true;
@@ -119,6 +120,8 @@ void ATask_PlayableCharacher::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitialRotation = GetActorRotation();
+
 	ATask_PlayerControllerBase* PlayerController = Cast<ATask_PlayerControllerBase>(GetLocalViewingPlayerController());
 	EnableInput(PlayerController);
 	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
@@ -153,6 +156,8 @@ void ATask_PlayableCharacher::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveRight, ETriggerEvent::Triggered, this, &ThisClass::MoveRight);
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveRight, ETriggerEvent::Completed, this, &ThisClass::MoveRight);
+
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Reset, ETriggerEvent::Triggered, this, &ThisClass::ResetCharacter);
 
 }
 
@@ -214,6 +219,50 @@ void  ATask_PlayableCharacher::BoardJump(const FInputActionValue& Value)
 		{
 			BoxCollision->AddImpulse(JumpImpulse);
 		}
+
+		// Random chance to stabilize angular velocity (reduce flipping).
+		// For example, 50% chance to damp angular rotation.
+
+		//Bellow: Not sure if its working .. Need more investigation.
+		float RandomChance = FMath::FRand();  
+		if (RandomChance < LessBoardFlipChance)  
+		{
+			// Print a debug message to the screen.
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Stabilizing jump angular velocity."));
+			}
+
+			// Get current angular velocity (in radians per second).
+			FVector CurrentAngularVelocity = BoxCollision->GetPhysicsAngularVelocityInRadians();
+			// Reduce the angular velocity by, say, 80%.
+			FVector NewAngularVelocity = CurrentAngularVelocity * 0.1f;
+			BoxCollision->SetPhysicsAngularVelocityInRadians(NewAngularVelocity, false);
+		}
+	}
+}
+
+void ATask_PlayableCharacher::ResetCharacter(const FInputActionValue& Value)
+{
+	FVector CurrentLocation = GetActorLocation();
+	SetActorLocationAndRotation(CurrentLocation, InitialRotation);
+
+	// Clear physics velocities.
+	if (BoxCollision)
+	{
+		BoxCollision->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		BoxCollision->SetPhysicsAngularVelocityInRadians(FVector::ZeroVector);
+	}
+
+	// Reset movement state variables.
+	CurrentBoardSpeed = 0.0f;
+	bMoving = false;
+	bNeedsSpeedUpdate = false;
+
+	// Debug message to confirm reset.
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Board reset to original orientation."));
 	}
 }
 
@@ -336,8 +385,6 @@ void ATask_PlayableCharacher::UpdateSpeed(float DeltaTime)
 		}
 	}
 }
-
-
 
 void ATask_PlayableCharacher::InitAbilityActorInfo()
 {

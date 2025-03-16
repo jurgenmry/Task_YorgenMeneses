@@ -20,6 +20,7 @@ public:
 	FGameplayTag Task_Native_Input_MoveForward;
 	FGameplayTag Task_Native_Input_Turn;
 	FGameplayTag Task_Native_Input_Jump;
+	FGameplayTag Task_Native_Input_Reset;
 	FGameplayTag Task_Native_Input_Camera_Zoom;
 
 	FGameplayTag Ability_Input_WhileInputActive;

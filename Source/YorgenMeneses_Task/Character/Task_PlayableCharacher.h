@@ -31,47 +31,52 @@ public:
 	ATask_PlayableCharacher();
 
 	//Variables:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	FVector BoxCollisionSize;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float LinearDamping;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float AngularDamping;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float SuspensionLength;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float SuspensionForce;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float SteeringForce;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float JumpForce;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float PlayerAcceleration;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float MaxBoardSpeed;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Settings");
+	UPROPERTY(BlueprintReadWrite, Category = "Player Settings");
 	bool bMoving;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (ClampMin = "10.0", ClampMax = "100.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings", meta = (ClampMin = "10.0", ClampMax = "100.0"))
 	float AccelerationRate;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float CurrentBoardSpeed;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(BlueprintReadWrite, Category = "Player Settings")
 	bool bNeedsSpeedUpdate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, Category = "Player Settings", meta = (ClampMin = "0.0", ClampMax = "1"))
+	float LessBoardFlipChance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	UAnimationAsset* JumpAnimation;
+
+	FRotator InitialRotation; // for the reset bug
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	TArray<USceneComponent*>Tires;
@@ -138,6 +143,7 @@ public:
 	void MoveForward(const FInputActionValue& Value);
 	void MoveRight(const FInputActionValue& Value);
 	void BoardJump(const FInputActionValue& Value);
+	void ResetCharacter(const FInputActionValue& Value);
 
 	void BoardSuspention(USceneComponent* Tire);
 	bool AllTiresGrounded();
