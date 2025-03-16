@@ -17,8 +17,6 @@
 
 ATask_BaseCharacher::ATask_BaseCharacher()
 {
-	PrimaryActorTick.bCanEverTick = false;
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
 	bAlwaysRelevant = true;
 }
 

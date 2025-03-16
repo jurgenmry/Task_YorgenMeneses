@@ -2,7 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "GameFramework/Pawn.h"
 #include "GameplayTagContainer.h"
 #include "AbilitySystemInterface.h"
 #include "Task_BaseCharacher.generated.h"
@@ -12,7 +12,7 @@ class UTask_AbilitySystemComponent;
 class UTask_AttributeSet;
 
 UCLASS(Abstract)
-class YORGENMENESES_TASK_API ATask_BaseCharacher : public ACharacter, public IAbilitySystemInterface
+class YORGENMENESES_TASK_API ATask_BaseCharacher : public APawn, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 

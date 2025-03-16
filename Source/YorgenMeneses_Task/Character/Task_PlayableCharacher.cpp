@@ -1,4 +1,4 @@
-
+﻿
 
 #include "Character/Task_PlayableCharacher.h"
 
@@ -21,6 +21,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/SceneComponent.h"
 
 //Input
 #include "EnhancedInputSubsystems.h"
@@ -33,8 +35,32 @@
 #include "Player/Task_PlayerState.h"
 
 ATask_PlayableCharacher::ATask_PlayableCharacher()
+	:BoxCollisionSize(FVector::ZeroVector)
+	, LinearDamping(3.0f)
+	, AngularDamping(5.0f)
+	, SuspensionLength(20.0f)
+	, SuspensionForce(8000.0f)
+	, SuspensionDamping(500.0f)
+	
 {
 	bReplicates = true;
+	SetActorTickEnabled(true);
+
+	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
+	SetRootComponent(BoxCollision);
+	BoxCollisionSize = FVector(60.f, 15.f, 3.f);
+	BoxCollision->SetBoxExtent(BoxCollisionSize);
+	BoxCollision->SetSimulatePhysics(true);
+	BoxCollision->SetEnableGravity(true);
+	BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	BoxCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+
+	BoomArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("BoomArm"));
+	BoomArm->SetupAttachment(GetRootComponent());
+	BoomArm->TargetArmLength = 300.0f;
+
+	SkateBoardMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SkateBoardMesh"));
+	SkateBoardMesh->SetupAttachment(BoxCollision);
 
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh1P->SetOnlyOwnerSee(false);
@@ -42,16 +68,27 @@ ATask_PlayableCharacher::ATask_PlayableCharacher()
 	Mesh1P->bCastDynamicShadow = true;
 	Mesh1P->CastShadow = true;
 
-	BoomArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("BoomArm"));
-	BoomArm->SetupAttachment(GetRootComponent());
-	BoomArm->TargetArmLength = 300.0f;
-
-	SkateBoardMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SkateBoardMesh"));
-	SkateBoardMesh->SetupAttachment(Mesh1P);
-
 	CharacterCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CharacterCameraComponent"));
 	CharacterCameraComponent->SetupAttachment(BoomArm);
 	CharacterCameraComponent->bUsePawnControlRotation = true;
+
+	FL_Wheel = CreateDefaultSubobject<USceneComponent>(TEXT("FL_Wheel"));
+	FR_Wheel = CreateDefaultSubobject<USceneComponent>(TEXT("FR_Wheel"));
+	BL_Wheel = CreateDefaultSubobject<USceneComponent>(TEXT("BL_Wheel"));
+	BR_Wheel = CreateDefaultSubobject<USceneComponent>(TEXT("BR_Wheel"));
+
+	FL_Wheel->SetupAttachment(SkateBoardMesh);
+	FR_Wheel->SetupAttachment(SkateBoardMesh);
+	BL_Wheel->SetupAttachment(SkateBoardMesh);
+	BR_Wheel->SetupAttachment(SkateBoardMesh);
+
+	Tires.Add(FL_Wheel);
+	Tires.Add(FR_Wheel);
+	Tires.Add(BL_Wheel);
+	Tires.Add(BR_Wheel);
+
+	BoxCollision->SetAngularDamping(AngularDamping);
+	BoxCollision->SetLinearDamping(LinearDamping);
 }
 
 void ATask_PlayableCharacher::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -62,31 +99,36 @@ void ATask_PlayableCharacher::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 void ATask_PlayableCharacher::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	
+	if (BoxCollision)
+	{
+		// Reset the velocity slightly each tick to avoid infinite stacking forces
+		FVector CurrentVelocity = BoxCollision->GetPhysicsLinearVelocity();
+		BoxCollision->SetPhysicsLinearVelocity(FVector(CurrentVelocity.X, CurrentVelocity.Y, 0.0f));
+	}
+
+	for (USceneComponent* Tire : Tires)
+	{
+		CarSuspention(Tire);
+	}
 }
+
+
 
 void ATask_PlayableCharacher::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (ATask_PlayerControllerBase* playerController = Cast<ATask_PlayerControllerBase>(GetController()))
+	ATask_PlayerControllerBase* PlayerController = Cast<ATask_PlayerControllerBase>(GetLocalViewingPlayerController());
+	EnableInput(PlayerController);
+	ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer();
+	if (LocalPlayer)
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-			GEngine->AddOnScreenDebugMessage(5, -1, FColor::Red, FString::Printf(TEXT("Added subsystem")), 1);
 		}
 	}
-
-	if (IsLocallyControlled())
-	{
-		SetActorTickEnabled(true);
-	}
-
-	else
-	{
-		SetActorTickEnabled(false);
-	}
-
 }
 
 void ATask_PlayableCharacher::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -100,12 +142,89 @@ void ATask_PlayableCharacher::SetupPlayerInputComponent(UInputComponent* PlayerI
 	TArray<uint32> BindHandles;
 
 	SInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::InputAbilityInputTagPressed, &ThisClass::InputAbilityInputTagReleased, BindHandles);
-	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveForward, ETriggerEvent::Triggered, this, &ThisClass::MoveForward);
-	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveRight, ETriggerEvent::Triggered, this, &ThisClass::MoveRight);
+
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_LookUp, ETriggerEvent::Triggered, this, &ThisClass::LookUp);
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Turn, ETriggerEvent::Triggered, this, &ThisClass::Turn);
-	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Camera_Zoom, ETriggerEvent::Triggered, this, &ThisClass::UpdateCameraZoom);
+
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveForward, ETriggerEvent::Triggered, this, &ThisClass::MoveForward);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveForward, ETriggerEvent::Completed, this, &ThisClass::MoveForward);
+
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveRight, ETriggerEvent::Triggered, this, &ThisClass::MoveRight);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveRight, ETriggerEvent::Completed, this, &ThisClass::MoveRight);
+
 }
+
+void ATask_PlayableCharacher::LookUp(const FInputActionValue& Value)
+{
+	// get the flat angle value for the input 
+	float LookValue = Value.Get<float>();
+	AddControllerPitchInput(-LookValue);
+}
+
+void ATask_PlayableCharacher::Turn(const FInputActionValue& Value)
+{
+	float TurnValue = Value.Get<float>();
+	AddControllerYawInput(TurnValue);
+}
+
+void ATask_PlayableCharacher::MoveForward(const FInputActionValue& Value)
+{
+}
+
+void ATask_PlayableCharacher::MoveRight(const FInputActionValue& Value)
+{
+}
+
+void ATask_PlayableCharacher::CarSuspention(USceneComponent* Tire)
+{
+
+	if (!Tire) return;
+
+	// Get the starting location of the tire
+	FVector Start = Tire->GetComponentLocation();
+	FVector End = Start + FVector(0.0f, 0.0f, -SuspensionLength); // Trace downward for suspension length
+
+	// Line Trace Setup
+	FHitResult HitResult;
+	FCollisionQueryParams TraceParams;
+	TraceParams.AddIgnoredActor(this); // Ignore the vehicle itself
+
+	// Perform the line trace
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, TraceParams);
+
+	if (HitResult.bBlockingHit)
+	{
+		// Calculate how much the suspension is compressed
+		float HitDistance = HitResult.Distance;
+
+		// Normalize the distance in range [0, SuspensionLength] and subtract from 1
+		float NormalizedHitDistance = 1.0f - FMath::GetMappedRangeValueClamped(
+			FVector2D(0.0f, SuspensionLength),
+			FVector2D(0.0f, 1.0f),
+			HitDistance
+		);
+
+		// Get the direction from the hit point to the wheel (unit direction vector)
+		FVector UnitDirection = (HitResult.TraceEnd - HitResult.TraceStart).GetSafeNormal();
+
+		// Calculate suspension force
+		FVector SuspensionForces = (-UnitDirection * NormalizedHitDistance) * SuspensionForce;
+
+		if (BoxCollision)
+		{
+			BoxCollision->AddForceAtLocation(SuspensionForces, Tire->GetComponentLocation());
+		}
+
+		// Debug Visualization
+		DrawDebugLine(GetWorld(), Start, HitResult.ImpactPoint, FColor::Green, false, 10.0f, 0, 2.0f);
+	}
+	else
+	{
+		// If no hit, draw debug red line to show the full trace range
+		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.0f, 0, 2.0f);
+	}
+}
+
 
 void ATask_PlayableCharacher::InitAbilityActorInfo()
 {
@@ -141,6 +260,7 @@ void ATask_PlayableCharacher::PossessedBy(AController* NewController)
 {
 	//for the client 
 	Super::PossessedBy(NewController);
+	ATask_PlayerControllerBase* PC = Cast<ATask_PlayerControllerBase>(NewController);
 	ATask_PlayerState* PS = Cast<ATask_PlayerState>(GetPlayerState());
 	if (PS)
 	{
@@ -153,31 +273,17 @@ void ATask_PlayableCharacher::PossessedBy(AController* NewController)
 			AbilitySet->GiveToAbilitySystem(AbilitySystemComponent.Get(), nullptr, this);
 		}
 	}
-}
-
-
-void ATask_PlayableCharacher::MoveForward(const FInputActionValue& Value)
-{
-}
-
-void ATask_PlayableCharacher::MoveRight(const FInputActionValue& Value)
-{
-}
-
-void ATask_PlayableCharacher::LookUp(const FInputActionValue& Value)
-{
-	float LookValue = Value.Get<float>();
-	AddControllerPitchInput(-LookValue);
-}
-
-void ATask_PlayableCharacher::Turn(const FInputActionValue& Value)
-{
-	float TurnValue = Value.Get<float>();
-	AddControllerYawInput(TurnValue);
-}
-
-void ATask_PlayableCharacher::UpdateCameraZoom(float DeltaTime)
-{
+	if (PC)
+	{
+		ULocalPlayer* LocalPlayer = PC->GetLocalPlayer();
+		if (LocalPlayer)
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
+			{
+				Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			}
+		}
+	}
 }
 
 void ATask_PlayableCharacher::InputAbilityInputTagPressed(FGameplayTag InputTag)

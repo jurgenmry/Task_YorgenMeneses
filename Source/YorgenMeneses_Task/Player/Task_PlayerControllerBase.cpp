@@ -16,7 +16,7 @@ ATask_PlayerControllerBase::ATask_PlayerControllerBase()
 
 ATask_BaseCharacher* ATask_PlayerControllerBase::GetPlayer() const
 {
-	return CastChecked<ATask_BaseCharacher>(GetCharacter(), ECastCheckedType::NullAllowed);;
+	return CastChecked<ATask_BaseCharacher>(GetPawn(), ECastCheckedType::NullAllowed);;
 }
 
 ATask_PlayerState* ATask_PlayerControllerBase::GetPlayerState() const
