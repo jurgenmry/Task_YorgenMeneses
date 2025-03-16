@@ -40,7 +40,7 @@ ATask_PlayableCharacher::ATask_PlayableCharacher()
 	, AngularDamping(5.0f)
 	, SuspensionLength(20.0f)
 	, SuspensionForce(8000.0f)
-	, SuspensionDamping(500.0f)
+	, PlayerAcceleration(100.0f)
 	
 {
 	bReplicates = true;
@@ -169,6 +169,24 @@ void ATask_PlayableCharacher::Turn(const FInputActionValue& Value)
 
 void ATask_PlayableCharacher::MoveForward(const FInputActionValue& Value)
 {
+	// Get the movement input from the input action
+	const float MovementInput = Value.Get<float>();
+	if (MovementInput != 0.0f)
+	{
+		FVector ForwardDirection = GetActorForwardVector();
+		// Iterate through all tire components
+		for (USceneComponent* Tire : Tires)
+		{
+			if (Tire)
+			{
+				FVector TireLocation = Tire->GetComponentLocation();
+				// Apply force at each tire position
+				GetBoxCollision()->AddForceAtLocation(
+					ForwardDirection * MovementInput * PlayerAcceleration * BoxCollision->GetMass(),
+					TireLocation);
+			}
+		}
+	}
 }
 
 void ATask_PlayableCharacher::MoveRight(const FInputActionValue& Value)
@@ -182,7 +200,8 @@ void ATask_PlayableCharacher::CarSuspention(USceneComponent* Tire)
 
 	// Get the starting location of the tire
 	FVector Start = Tire->GetComponentLocation();
-	FVector End = Start + FVector(0.0f, 0.0f, -SuspensionLength); // Trace downward for suspension length
+	FVector DirectionVector = Tire->GetUpVector()* FVector(0.0f, 0.0f, -SuspensionLength);
+	FVector End = Start + DirectionVector; // Trace downward for suspension length
 
 	// Line Trace Setup
 	FHitResult HitResult;
@@ -192,7 +211,7 @@ void ATask_PlayableCharacher::CarSuspention(USceneComponent* Tire)
 	// Perform the line trace
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, TraceParams);
 
-	if (HitResult.bBlockingHit)
+	if (HitResult.bBlockingHit && HitResult.Distance < (SuspensionLength * 0.9f))
 	{
 		// Calculate how much the suspension is compressed
 		float HitDistance = HitResult.Distance;

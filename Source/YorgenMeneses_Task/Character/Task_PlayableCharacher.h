@@ -30,6 +30,29 @@ public:
 
 	ATask_PlayableCharacher();
 
+	//Variables:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	FVector BoxCollisionSize;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float LinearDamping;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float AngularDamping;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float SuspensionLength;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float SuspensionForce;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float PlayerAcceleration;
+
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
+	TArray<USceneComponent*>Tires;
+
 	//components
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -69,28 +92,6 @@ public:
 	USceneComponent* BR_Wheel;
 	FORCEINLINE USceneComponent* GetBR_Wheel() const { return BR_Wheel; }
 
-
-	//Variables:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	FVector BoxCollisionSize;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	float LinearDamping;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	float AngularDamping;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	float SuspensionLength;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	float SuspensionForce;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	float SuspensionDamping;
-
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
-	TArray<USceneComponent*>Tires;
 
 	//Functions
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
