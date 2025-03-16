@@ -33,6 +33,8 @@
 //Others
 #include "Player/Task_PlayerControllerBase.h"
 #include "Player/Task_PlayerState.h"
+#include "Blueprint/UserWidget.h"
+#include "Widgets/Task_ScoreHud.h"
 
 ATask_PlayableCharacher::ATask_PlayableCharacher()
 	:BoxCollisionSize(FVector::ZeroVector)
@@ -46,7 +48,9 @@ ATask_PlayableCharacher::ATask_PlayableCharacher()
 	, MaxBoardSpeed(1000.0f)
 	, bMoving(false)
 	, AccelerationRate(50.0f)
+	, BrakeRate(1000.0f)
 	, LessBoardFlipChance(0.5f)
+	, Braking(false)
 {
 	bReplicates = true;
 	SetActorTickEnabled(true);
@@ -105,8 +109,16 @@ void ATask_PlayableCharacher::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	UpdateSpeed(DeltaSeconds);
-
+	
+	if (bMoving)
+	{
+		UpdateSpeed(DeltaSeconds);
+	}
+	if (Braking)
+	{
+		BrakeSpeed(DeltaSeconds);
+	}
+	
 	for (USceneComponent* Tire : Tires)
 	{
 		BoardSuspention(Tire);
@@ -116,6 +128,7 @@ void ATask_PlayableCharacher::Tick(float DeltaSeconds)
 void ATask_PlayableCharacher::BeginPlay()
 {
 	Super::BeginPlay();
+	CreateHudWidget();
 
 	InitialRotation = GetActorRotation();
 
@@ -154,7 +167,11 @@ void ATask_PlayableCharacher::SetupPlayerInputComponent(UInputComponent* PlayerI
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveRight, ETriggerEvent::Triggered, this, &ThisClass::MoveRight);
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_MoveRight, ETriggerEvent::Completed, this, &ThisClass::MoveRight);
 
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Brake, ETriggerEvent::Triggered, this, &ThisClass::BreakBoard);
+	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Brake, ETriggerEvent::Completed, this, &ThisClass::BreakBoard);
+
 	SInputComponent->BindNativeAction(InputConfig, GameplayTags.Task_Native_Input_Reset, ETriggerEvent::Triggered, this, &ThisClass::ResetCharacter);
+
 
 }
 
@@ -265,6 +282,12 @@ void ATask_PlayableCharacher::ResetCharacter(const FInputActionValue& Value)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Board reset to original orientation."));
 	}
+}
+
+void ATask_PlayableCharacher::BreakBoard(const FInputActionValue& Value)
+{
+	float BrakeInput = Value.Get<float>();
+	Braking = (BrakeInput > KINDA_SMALL_NUMBER);
 }
 
 void ATask_PlayableCharacher::BoardSuspention(USceneComponent* Tire)
@@ -387,6 +410,21 @@ void ATask_PlayableCharacher::UpdateSpeed(float DeltaTime)
 	}
 }
 
+void ATask_PlayableCharacher::BrakeSpeed(float DeltaTime)
+{
+	if (CurrentBoardSpeed > 0.0f)
+	{
+		// Reduce the current board speed by the BrakeRate.
+		CurrentBoardSpeed = FMath::Max(CurrentBoardSpeed - BrakeRate * DeltaTime, 0.0f);
+
+		// Update the board's velocity. 
+		FVector CurrentVelocity = BoxCollision->GetPhysicsLinearVelocity();
+		FVector NewVelocity = GetActorForwardVector() * CurrentBoardSpeed;
+		NewVelocity.Z = CurrentVelocity.Z;
+		BoxCollision->SetPhysicsLinearVelocity(NewVelocity);
+	}
+}
+
 void ATask_PlayableCharacher::InitAbilityActorInfo()
 {
 	ATask_PlayerState* MainPlayerState = GetPlayerState<ATask_PlayerState>();
@@ -460,5 +498,31 @@ void ATask_PlayableCharacher::InputAbilityInputTagReleased(FGameplayTag InputTag
 	if (AbilitySystemComponent->IsValidLowLevel())
 	{
 		AbilitySystemComponent->AbilityInputTagReleased(InputTag);
+	}
+}
+
+void ATask_PlayableCharacher::CreateHudWidget()
+{
+	if (HUDWidgetClass != nullptr)
+	{
+		UTask_ScoreHud* HDWidget = CreateWidget<UTask_ScoreHud>(GetWorld(), HUDWidgetClass);
+		ScoreHud = Cast<UTask_ScoreHud>(HDWidget);
+		if (ScoreHud != nullptr)
+		{
+			ScoreHud->AddToViewport(); // Add the widget to the viewport for display
+		}
+		else
+		{
+			FString MSG = "fill in Widget In HUD";
+			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Blue, MSG, 1);
+		}
+	}
+}
+
+void ATask_PlayableCharacher::AddPointsToHUD(int32 Points)
+{
+	if (ScoreHud)
+	{
+		ScoreHud->AddPoints(Points);
 	}
 }

@@ -8,24 +8,13 @@
 #include "AbilitySystem/Task_AbilitySystemComponent.h"
 #include "Player/Task_PlayerState.h"
 
-#include "Blueprint/UserWidget.h"
-#include "Widgets/Task_ScoreHud.h"
-
 ATask_PlayerControllerBase::ATask_PlayerControllerBase()
 {
+
 }
 
 void ATask_PlayerControllerBase::BeginPlay()
 {
-	// Create the score widget and add it to the viewport.
-	if (ScoreHudClass)
-	{
-		ScoreHud = CreateWidget<UTask_ScoreHud>(this, ScoreHudClass);
-		if (ScoreHud)
-		{
-			ScoreHud->AddToViewport();
-		}
-	}
 }
 
 
@@ -80,10 +69,3 @@ void ATask_PlayerControllerBase::PostProcessInput(const float DeltaTime, const b
 	Super::PostProcessInput(DeltaTime, bGamePaused);
 }
 
-void ATask_PlayerControllerBase::AddPointsToHUD(int32 Points)
-{
-	if (ScoreHud)
-	{
-		ScoreHud->AddPoints(Points);
-	}
-}

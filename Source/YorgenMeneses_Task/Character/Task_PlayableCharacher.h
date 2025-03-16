@@ -20,6 +20,7 @@ class UCameraComponent;
 class USceneComponent;
 class UTask_AbilitySet;
 class UTask_InputConfig;
+class UTask_ScoreHud;
 
 UCLASS()
 class YORGENMENESES_TASK_API ATask_PlayableCharacher : public ATask_BaseCharacher
@@ -64,6 +65,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings", meta = (ClampMin = "10.0", ClampMax = "100.0"))
 	float AccelerationRate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float BrakeRate;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	float CurrentBoardSpeed;
 
@@ -73,6 +77,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Settings", meta = (ClampMin = "0.0", ClampMax = "1"))
 	float LessBoardFlipChance;
 
+	bool Braking;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
 	UAnimMontage* JumpAnimation;
 
@@ -80,6 +86,16 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	TArray<USceneComponent*>Tires;
+
+	UFUNCTION(BlueprintCallable, Category = "Score")
+	void AddPointsToHUD(int32 Points);
+
+	void CreateHudWidget();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UTask_ScoreHud> HUDWidgetClass;
+
+	UTask_ScoreHud* ScoreHud;
 
 	//components
 
@@ -144,10 +160,13 @@ public:
 	void MoveRight(const FInputActionValue& Value);
 	void BoardJump(const FInputActionValue& Value);
 	void ResetCharacter(const FInputActionValue& Value);
+	void BreakBoard(const FInputActionValue& Value);
+	
 
 	void BoardSuspention(USceneComponent* Tire);
 	bool AllTiresGrounded();
 	void UpdateSpeed(float DeltaTime);
+	void BrakeSpeed(float DeltaTime);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "InputSystem|Input")
 	UInputMappingContext* DefaultMappingContext;

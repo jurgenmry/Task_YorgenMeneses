@@ -63,15 +63,9 @@ void ATask_PointZone::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AAc
                 return;
             }
 
-          
             int32 AwardedPoints = FMath::RandRange(MinPoints, MaxPoints);
-
-            ATask_PlayerControllerBase* PC = Cast<ATask_PlayerControllerBase>(GetWorld()->GetFirstPlayerController());
-            if (PC)
-            {
-                PC->AddPointsToHUD(AwardedPoints);
-            }
-
+            
+            PlayerChar->AddPointsToHUD(AwardedPoints);
             /*
             if (GEngine)
             {
