@@ -74,7 +74,7 @@ public:
 	float LessBoardFlipChance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Settings")
-	UAnimationAsset* JumpAnimation;
+	UAnimMontage* JumpAnimation;
 
 	FRotator InitialRotation; // for the reset bug
 

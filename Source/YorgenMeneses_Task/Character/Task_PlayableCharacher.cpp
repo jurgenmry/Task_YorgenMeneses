@@ -114,8 +114,6 @@ void ATask_PlayableCharacher::Tick(float DeltaSeconds)
 	}
 }
 
-
-
 void ATask_PlayableCharacher::BeginPlay()
 {
 	Super::BeginPlay();
@@ -210,7 +208,11 @@ void  ATask_PlayableCharacher::BoardJump(const FInputActionValue& Value)
 		// Play the jump animation on the character mesh, if one is set.
 		if (Mesh1P && JumpAnimation)
 		{
-			Mesh1P->PlayAnimation(JumpAnimation, false);
+			UAnimInstance* AnimInst = GetMesh1P()->GetAnimInstance();
+			if (AnimInst)
+			{
+				AnimInst->Montage_Play(JumpAnimation);
+			}
 		}
 
 		// Apply an upward impulse from the bottom of the board.
